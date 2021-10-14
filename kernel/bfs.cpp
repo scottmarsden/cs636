@@ -2,12 +2,13 @@
 #include <iostream>
 #include "csr.h"
 #include <queue>
+#include "omp.h"
 
 using std::cout;
 using std::endl;
 
 void mtBFS(graph_t& g, vid_t root){
-	cout << "root = " << root << endl;
+	cout << "parallel BFS root = " << root << endl;
 	csr_t* csr = &g.csr;
     	csr_t* csc = &g.csc;
 	vid_t* nbrs = csr->get_nbrs();
@@ -18,28 +19,60 @@ void mtBFS(graph_t& g, vid_t root){
     }
     visited[root] = 0;
 	
-	queue<vid_t> q;
-	q.push(root);
-	while (!q.empty()) {
-  	vid_t start = offset[currNode];
-      	vid_t end = offset[currNode + 1];
+    bool complete = false;
+    omp_set_num_threads((int) csr->get_vcount());
+    vid_t level = 0;
+    
+	while (complete != true) {
+  	//paralell loop instead of queue otherwise same structure as BFS
   	#pragma omp parallel for
-  	for (int i = start; i < end; i++) {
-    		node* currNode;
-    	#pragma omp critical
-    	{
-      	currNode = q.front();
-	if (currNode < visted[nbrs[i]]){
-		visited[nbrs[i]] = visited[currNode] + 1;
-                frontier.push(nbrs[i]);
+  	for (int i = 0; i < (int) csr->get_vcount(); i++) {
+    		if(visited[i] == level){
+			
+		vid_t start = offset[i];
+      		vid_t end = offset[i + 1];
+		}
 	}
-      	q.pop();
-    	}
-    	if (
-    	#pragma omp critical
-    	q.push(currNode);
-  }
-}
+		
+		for (int j = start; j < end; j++){
+			if (visited[nbrs[i]] > visited[currNode] + 1 ){
+        		//cout << nbrs[i]  << endl;
+          			visited[nbrs[i]] = visited[currNode] + 1;
+			}
+		}
+	complete = true;
+	level = level + 1;
+	//check to make sure we have seen every node
+	for (int i = 0; i < (int) csr->get_vcount(); i++{
+		if(visted[i] == 1000){
+			complete = false
+		}
+	}
+	}
+	     
+    //same print structure are regular BFS
+    int levelCount = 0;
+    for(int i = 0; i < (int) csr->get_vcount(); i++){
+      	 if (visited[i] > levelCount){
+        	levelCount = visited[i];
+        		//cout << levelCount << endl;
+      	 }
+     }
+    
+    
+    //counts the level
+    int levels[levelCount+1] = {0};
+    for(int i = 0; i < (int) csr->get_vcount(); i++){
+      	levels[visited[i]] = levels[visited[i]]+ 1;
+    }
+    
+    
+    //prints level output in form Level #: # of nodes
+    for(int i = 0; i < levelCount + 1; i++){
+      	cout<<"level"<< i << ": " << levels[i] <<endl;
+    }
+	
+
 	
 }
 
@@ -98,7 +131,7 @@ void run_bfs(graph_t& g, vid_t root)
     }
     
     
-    //counts the leve
+    //counts the level
     int levels[levelCount+1] = {0};
     for(int i = 0; i < (int) csr->get_vcount(); i++){
       levels[visited[i]] = levels[visited[i]]+ 1;
