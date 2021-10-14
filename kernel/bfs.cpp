@@ -8,6 +8,39 @@ using std::endl;
 
 void mtBFS(graph_t& g, vid_t root){
 	cout << "root = " << root << endl;
+	csr_t* csr = &g.csr;
+    	csr_t* csc = &g.csc;
+	vid_t* nbrs = csr->get_nbrs();
+    	vid_t* offset = csr->get_offset();
+	int visited[(int) csr->get_vcount()];
+    for (int i = 0; i < (int) csr->get_vcount(); i++){
+      visited[i] = 1000;
+    }
+    visited[root] = 0;
+	
+	queue<vid_t> q;
+	q.push(root);
+	while (!q.empty()) {
+  	vid_t start = offset[currNode];
+      	vid_t end = offset[currNode + 1];
+  	#pragma omp parallel for
+  	for (int i = start; i < end; i++) {
+    		node* currNode;
+    	#pragma omp critical
+    	{
+      	currNode = q.front();
+	if (currNode < visted[nbrs[i]]){
+		visited[nbrs[i]] = visited[currNode] + 1;
+                frontier.push(nbrs[i]);
+	}
+      	q.pop();
+    	}
+    	if (
+    	#pragma omp critical
+    	q.push(currNode);
+  }
+}
+	
 }
 
 
